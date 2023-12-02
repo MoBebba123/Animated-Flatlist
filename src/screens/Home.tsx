@@ -22,9 +22,8 @@ const SPACING = 20;
 const AVATAR_SIZE = 70;
 const ITEM_SIZE = AVATAR_SIZE + SPACING * 2;
 interface Props {}
-const App: React.FC<Props> = ({}) => {
+const Home: React.FC<Props> = ({}) => {
   const scrollY = React.useRef(new Animated.Value(0)).current;
-
   return (
     <View style={{flex: 1, backgroundColor: '#fff'}}>
       <Image
@@ -123,4 +122,4 @@ const App: React.FC<Props> = ({}) => {
     </View>
   );
 };
-export default App;
+export default Home;
