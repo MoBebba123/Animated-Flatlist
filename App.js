@@ -1,454 +1,309 @@
-import React, {useRef, useEffect, useState} from 'react';
+import React from 'react';
 import {
-  StatusBar,
-  Easing,
-  TouchableWithoutFeedback,
-  Dimensions,
-  Animated,
+  StyleSheet,
   Text,
   View,
-  StyleSheet,
+  Image,
+  Dimensions,
+  Animated,
+  StatusBar,
 } from 'react-native';
+import data from './data';
 
 const {width, height} = Dimensions.get('window');
-const DURATION = 400;
-const LOGO_SIZE = 200;
-const ICON_SIZE = 30;
-const CLOSE_MODE = 200;
-const ICON_LINE_HEIGHT = 2;
+const LOGO_WIDTH = 220;
+const LOGO_HEIGHT = 40;
+const DOT_SIZE = 40;
+const TICKER_HEIGHT = 40;
+const CIRCLE_SIZE = width * 0.6;
 
-const closeItems = [0, 1];
-const burgerItems = [0, 1, 2];
-
-const App = () => {
-  const closeAnimations = closeItems.map(
-    () => useRef(new Animated.Value(-CLOSE_MODE)).current,
-  );
-  const burgerAnimations = burgerItems.map(
-    () => useRef(new Animated.Value(0)).current,
-  );
-
-  const animateStripe = useRef(new Animated.Value(height)).current;
-  const animateBg = useRef(new Animated.Value(0)).current;
-  const animateOpacity = useRef(new Animated.Value(1)).current;
-
-  const [finished, setFinished] = useState(false);
-  const [closeFinished, setCloseFinished] = useState(false);
-
-  useEffect(() => {
-    StatusBar.setHidden(true);
-  }, []);
-
-  const animateClose = () => {
-    const animations = closeItems.map(i => {
-      if (closeFinished) {
-        return Animated.timing(closeAnimations[i], {
-          toValue: i === 0 ? -CLOSE_MODE : CLOSE_MODE,
-          duration: DURATION,
-          useNativeDriver: false,
-        });
-      } else {
-        return Animated.sequence([
-          Animated.delay(DURATION / 2),
-          Animated.timing(closeAnimations[i], {
-            toValue: 0,
-            duration: DURATION,
-            useNativeDriver: false,
-          }),
-        ]);
-      }
-    });
-
-    return Animated.stagger(150, animations);
-  };
-
-  const animateBurger = () => {
-    const animations = burgerItems.map(i => {
-      if (closeFinished) {
-        return Animated.timing(burgerAnimations[i], {
-          toValue: 0,
-          duration: DURATION,
-          useNativeDriver: false,
-        });
-      } else {
-        return Animated.timing(burgerAnimations[i], {
-          toValue: CLOSE_MODE,
-          duration: DURATION,
-          useNativeDriver: false,
-        });
-      }
-    });
-
-    return Animated.stagger(150, animations);
-  };
-
-  const renderCloseButton = () => {
-    return (
-      <View>
-        {closeItems.map(i => {
-          const inputRange = i === 0 ? [-CLOSE_MODE, 0] : [0, CLOSE_MODE];
-
-          const bg = closeAnimations[i].interpolate({
-            inputRange: [-CLOSE_MODE / 3, 0, CLOSE_MODE / 3],
-            outputRange: ['#aaa', '#353535', '#aaa'],
-          });
-          const opacity = closeAnimations[i].interpolate({
-            inputRange: [-CLOSE_MODE / 3, 0, CLOSE_MODE / 3],
-            outputRange: [0, 1, 0],
-          });
-
-          return (
-            <Animated.View
-              key={i}
-              style={[
-                styles.line,
-                {
-                  marginBottom: i === 0 ? -ICON_LINE_HEIGHT : 0,
-                  backgroundColor: bg,
-                  transform: [
-                    {
-                      rotate: i === 0 ? '90deg' : '0deg',
-                    },
-                    {
-                      translateX: closeAnimations[i],
-                    },
-                  ],
-                },
-              ]}
-            />
-          );
-        })}
-      </View>
-    );
-  };
-
-  const renderBurger = () => {
-    return (
-      <View
-        style={[
-          styles.closeContainer,
-          styles.burgerContainer,
-          {position: 'absolute', top: 0, right: 0},
-        ]}>
-        <Animated.View
-          style={[
-            styles.line,
-            styles.lineMedium,
-            {
-              transform: [
-                {
-                  translateX: burgerAnimations[1],
-                },
-              ],
-            },
-          ]}
-        />
-        <Animated.View
-          style={[
-            styles.line,
-            {
-              transform: [
-                {
-                  translateX: burgerAnimations[0],
-                },
-              ],
-            },
-          ]}
-        />
-        <Animated.View
-          style={[
-            styles.line,
-            styles.lineSmall,
-            {
-              transform: [
-                {
-                  translateX: burgerAnimations[2],
-                },
-              ],
-            },
-          ]}
-        />
-      </View>
-    );
-  };
-
-  const restartAnimation = () => {
-    if (finished) {
-      Animated.parallel([
-        Animated.sequence([
-          Animated.timing(animateBg, {
-            toValue: 1,
-            duration: DURATION / 10,
-            useNativeDriver: false,
-          }),
-          Animated.timing(animateStripe, {
-            toValue: height,
-            duration: DURATION,
-            easing: Easing.Out,
-            useNativeDriver: false,
-          }),
-        ]),
-        animateClose(),
-        animateBurger(),
-        Animated.sequence([
-          Animated.delay(DURATION - 150),
-          Animated.timing(animateOpacity, {
-            toValue: 1,
-            duration: DURATION,
-            useNativeDriver: false,
-          }),
-        ]),
-      ]).start(() => {
-        animateBg.setValue(0);
-        setCloseFinished(!closeFinished);
-      });
-    } else {
-      Animated.parallel([
-        Animated.timing(animateOpacity, {
-          toValue: 0,
-          duration: DURATION,
-          useNativeDriver: false,
-        }),
-
-        animateBurger(),
-        animateClose(),
-
-        Animated.sequence([
-          Animated.delay(DURATION - 150),
-          Animated.timing(animateStripe, {
-            toValue: 0,
-            duration: DURATION,
-            easing: Easing.Out,
-            useNativeDriver: false,
-          }),
-        ]),
-      ]).start(() => {
-        animateOpacity.setValue(0);
-        setCloseFinished(!closeFinished);
-      });
-    }
-  };
-
-  const top = animateStripe.interpolate({
-    inputRange: [0, height],
-    outputRange: [-height / 4, 0],
-    extrapolate: 'clamp',
-  });
-
-  const bottom = animateStripe.interpolate({
-    inputRange: [0, height],
-    outputRange: [height / 4, 0],
-    extrapolate: 'clamp',
-  });
-
-  const opacityValue = animateStripe.interpolate({
-    inputRange: [0, height / 1.5, height],
-    outputRange: [1, 0, 0],
-    extrapolate: 'clamp',
-  });
-
-  const translateContent = animateStripe.interpolate({
-    inputRange: [0, height],
-    outputRange: [0, 30],
-    extrapolate: 'clamp',
-  });
-
-  const bgColor = animateBg.interpolate({
-    inputRange: [0, 0.002, 1],
-    outputRange: ['#bdc3c7', '#bdc3c7', '#bdc3c7'],
-  });
-
-  const scaleLogo = animateOpacity.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.3, 1],
-  });
-
+const Circle = ({scrollX}) => {
   return (
-    <View style={styles.container}>
-      <Animated.View
-        style={[
-          StyleSheet.absoluteFill,
-          {
-            backgroundColor: bgColor,
-          },
-        ]}
-      />
-      <Animated.View
-        style={[
-          styles.menuContainer,
-
-          StyleSheet.absoluteFill,
-
-          {
-            backgroundColor: 'transparent',
-            // opacity: animateOpacity,
-            transform: [{translateY: translateContent}],
-          },
-        ]}>
-        <View
-          style={{
-            flex: 1,
-            alignItems: 'center',
-            justifyContent: 'space-around',
-            backgroundColor: 'transparent',
-          }}>
-          <Text style={styles.buttonStyle}>Login</Text>
-          <Text style={styles.buttonStyle}>Create account</Text>
-          <Text style={styles.buttonStyle}>Support</Text>
-          <Text style={styles.buttonStyle}>About</Text>
-        </View>
-      </Animated.View>
-      <View
-        style={{
-          backgroundColor: 'transparent',
-          position: 'absolute',
-          transform: [
-            {
-              rotate: '-35deg',
-            },
-          ],
-        }}>
-        <Animated.View
-          style={[
-            styles.strip,
-            styles.top,
-            {
-              height: animateStripe,
-              transform: [
-                {
-                  translateY: top,
-                },
-              ],
-            },
-          ]}
-        />
-        <Animated.View
-          style={[
-            styles.strip,
-            styles.bottom,
-            {
-              height: animateStripe,
-              transform: [
-                {
-                  translateY: bottom,
-                },
-              ],
-            },
-          ]}
-        />
-      </View>
-      <Animated.Image
-        source={{
-          uri: 'https://www.dietrichid.com/wp-content/uploads/2014/02/Apple-Logo-black-e1445240849408.png',
-        }}
-        style={[
-          StyleSheet.absoluteFill,
-          styles.image,
-          {
-            opacity: animateOpacity,
-            transform: [
+    <View style={[StyleSheet.absoluteFillObject, styles.circleContainer]}>
+      {data.map(({color}, index) => {
+        const inputRange = [
+          (index - 0.55) * width,
+          index * width,
+          (index + 0.55) * width,
+        ];
+        const scale = scrollX.interpolate({
+          inputRange,
+          outputRange: [0, 1, 0],
+          extrapolate: 'clamp',
+        });
+        const opacity = scrollX.interpolate({
+          inputRange,
+          outputRange: [0, 0.2, 0],
+        });
+        return (
+          <Animated.View
+            key={index}
+            style={[
+              styles.circle,
               {
-                scale: scaleLogo,
+                backgroundColor: color,
+                opacity,
+                transform: [{scale}],
               },
-            ],
-          },
-        ]}
-      />
-
-      <TouchableWithoutFeedback
-        onPress={() => {
-          setFinished(!finished);
-          restartAnimation();
-        }}>
-        <View
-          style={[
-            styles.closeContainer,
-            styles.burgerContainer,
-            {
-              transform: [
-                {
-                  rotate: '-45deg',
-                },
-              ],
-            },
-          ]}>
-          {renderCloseButton()}
-          {renderBurger()}
-        </View>
-      </TouchableWithoutFeedback>
+            ]}
+          />
+        );
+      })}
     </View>
   );
 };
 
+const Ticker = ({scrollX}) => {
+  const inputRange = [-width, 0, width];
+  const translateY = scrollX.interpolate({
+    inputRange,
+    outputRange: [TICKER_HEIGHT, 0, -TICKER_HEIGHT],
+  });
+  return (
+    <View style={styles.tickerContainer}>
+      <Animated.View style={{transform: [{translateY}]}}>
+        {data.map(({type}, index) => {
+          return (
+            <Text key={index} style={styles.tickerText}>
+              {type}
+            </Text>
+          );
+        })}
+      </Animated.View>
+    </View>
+  );
+};
+
+const Item = ({imageUri, heading, description, index, scrollX}) => {
+  const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
+  const inputRangeOpacity = [
+    (index - 0.3) * width,
+    index * width,
+    (index + 0.3) * width,
+  ];
+  const scale = scrollX.interpolate({
+    inputRange,
+    outputRange: [0, 1, 0],
+  });
+  const translateXHeading = scrollX.interpolate({
+    inputRange,
+    outputRange: [width * 0.1, 0, -width * 0.1],
+  });
+  const translateXDescription = scrollX.interpolate({
+    inputRange,
+    outputRange: [width * 0.7, 0, -width * 0.7],
+  });
+  const opacity = scrollX.interpolate({
+    inputRange: inputRangeOpacity,
+    outputRange: [0, 1, 0],
+  });
+
+  return (
+    <View style={styles.itemStyle}>
+      <Animated.Image
+        source={imageUri}
+        style={[
+          styles.imageStyle,
+          {
+            transform: [{scale}],
+          },
+        ]}
+      />
+      <View style={styles.textContainer}>
+        <Animated.Text
+          style={[
+            styles.heading,
+            {
+              opacity,
+              transform: [{translateX: translateXHeading}],
+            },
+          ]}>
+          {heading}
+        </Animated.Text>
+        <Animated.Text
+          style={[
+            styles.description,
+            {
+              opacity,
+              transform: [
+                {
+                  translateX: translateXDescription,
+                },
+              ],
+            },
+          ]}>
+          {description}
+        </Animated.Text>
+      </View>
+    </View>
+  );
+};
+
+const Pagination = ({scrollX}) => {
+  const inputRange = [-width, 0, width];
+  const translateX = scrollX.interpolate({
+    inputRange,
+    outputRange: [-DOT_SIZE, 0, DOT_SIZE],
+  });
+  return (
+    <View style={[styles.pagination]}>
+      <Animated.View
+        style={[
+          styles.paginationIndicator,
+          {
+            position: 'absolute',
+            // backgroundColor: 'red',
+            transform: [{translateX}],
+          },
+        ]}
+      />
+      {data.map(item => {
+        return (
+          <View key={item.key} style={styles.paginationDotContainer}>
+            <View
+              style={[styles.paginationDot, {backgroundColor: item.color}]}
+            />
+          </View>
+        );
+      })}
+    </View>
+  );
+};
+
+export default function App() {
+  const scrollX = React.useRef(new Animated.Value(0)).current;
+
+  return (
+    <View style={styles.container}>
+      <StatusBar />
+      <Circle scrollX={scrollX} />
+      <Animated.FlatList
+        keyExtractor={item => item.key}
+        data={data}
+        renderItem={({item, index}) => (
+          <Item {...item} index={index} scrollX={scrollX} />
+        )}
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        horizontal
+        onScroll={Animated.event(
+          [{nativeEvent: {contentOffset: {x: scrollX}}}],
+          {useNativeDriver: true},
+        )}
+        scrollEventThrottle={16}
+      />
+      <Image
+        style={styles.logo}
+        source={require('./assets/ue_black_logo.png')}
+      />
+      <Pagination scrollX={scrollX} />
+      <Ticker scrollX={scrollX} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  closeContainer: {
-    height: ICON_SIZE,
-    width: ICON_SIZE,
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    top: 40,
-    right: 40,
-  },
-  line: {
-    height: ICON_LINE_HEIGHT,
-    width: ICON_SIZE,
-    backgroundColor: '#aaa',
-  },
-  burgerContainer: {
-    justifyContent: 'space-around',
-  },
-  lineMedium: {
-    width: ICON_SIZE * 0.67,
-    alignSelf: 'flex-start',
-  },
-  lineSmall: {
-    width: ICON_SIZE * 0.45,
-    alignSelf: 'flex-end',
-  },
-  image: {
-    resizeMode: 'contain',
-    width: LOGO_SIZE,
-    height: LOGO_SIZE,
-    top: height / 2 - LOGO_SIZE / 2,
-    left: width / 2 - LOGO_SIZE / 2,
-  },
-  menuContainer: {
-    flex: 1,
-    justifyContent: 'space-around',
-    paddingVertical: height / 5,
-    backgroundColor: 'white',
-  },
-  buttonStyle: {
-    fontWeight: 'bold',
-    fontSize: 20,
-    color: '#353535',
-  },
   container: {
     flex: 1,
+    marginTop: StatusBar.currentHeight || 30,
+  },
+  itemStyle: {
+    width,
+    height,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 22,
-    backgroundColor: '#ecf0f1',
   },
-  strip: {
-    backgroundColor: '#353535',
-    height: height,
-    width: width * 3,
+  imageStyle: {
+    width: width * 0.75,
+    height: width * 0.75,
+    resizeMode: 'contain',
+    flex: 1,
   },
-  top: {
-    // backgroundColor: 'green'
+  textContainer: {
+    alignItems: 'flex-start',
+    alignSelf: 'flex-end',
+    flex: 0.5,
   },
-  bottom: {
-    // backgroundColor: 'red',
+  heading: {
+    color: '#444',
+    textTransform: 'uppercase',
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: 2,
+    marginBottom: 5,
   },
-  paragraph: {
-    margin: 24,
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#34495e',
+  description: {
+    color: '#ccc',
+    fontWeight: '600',
+    textAlign: 'left',
+    width: width * 0.75,
+    marginRight: 10,
+    fontSize: 16,
+    lineHeight: 16 * 1.5,
+  },
+  logo: {
+    opacity: 0.9,
+    height: LOGO_HEIGHT,
+    width: LOGO_WIDTH,
+    resizeMode: 'contain',
+    position: 'absolute',
+    left: 10,
+    bottom: 10,
+    transform: [
+      {translateX: -LOGO_WIDTH / 2},
+      {translateY: -LOGO_HEIGHT / 2},
+      {rotateZ: '-90deg'},
+      {translateX: LOGO_WIDTH / 2},
+      {translateY: LOGO_HEIGHT / 2},
+    ],
+  },
+  pagination: {
+    position: 'absolute',
+    right: 20,
+    bottom: 40,
+    flexDirection: 'row',
+    height: DOT_SIZE,
+  },
+  paginationDot: {
+    width: DOT_SIZE * 0.3,
+    height: DOT_SIZE * 0.3,
+    borderRadius: DOT_SIZE * 0.15,
+  },
+  paginationDotContainer: {
+    width: DOT_SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paginationIndicator: {
+    width: DOT_SIZE,
+    height: DOT_SIZE,
+    borderRadius: DOT_SIZE / 2,
+    borderWidth: 2,
+    borderColor: '#ddd',
+  },
+  tickerContainer: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    overflow: 'hidden',
+    height: TICKER_HEIGHT,
+  },
+  tickerText: {
+    fontSize: TICKER_HEIGHT,
+    lineHeight: TICKER_HEIGHT,
+    textTransform: 'uppercase',
+    fontWeight: '800',
+  },
+
+  circleContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  circle: {
+    width: CIRCLE_SIZE,
+    height: CIRCLE_SIZE,
+    borderRadius: CIRCLE_SIZE / 2,
+    position: 'absolute',
+    top: '15%',
   },
 });
-export default App;
